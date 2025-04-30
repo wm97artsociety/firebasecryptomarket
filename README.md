@@ -6,7 +6,7 @@ update the marketplace admin wallet to sell and the tax wallet
 
 update youre firebase account free of charge
 
-buy a domain name and sub domain name 
+buy a domain name and sub domain name or get one free from ai 
 
 upload files to a hosting center like godaddy
 
