@@ -1,6 +1,6 @@
 # firebasecryptomarket
 
-perfect software ready to sell 
+perfect software ready for selling  
 
 update the marketplace admin wallet to sell and the tax wallet
 
@@ -13,6 +13,7 @@ upload files to a hosting center like godaddy
 
 
 perks to the software 
+firebase product center update firebase api and such on the code to activate product display globally 
 
 crypto payments with usd payments
 tax download papers for taxs easy sell and do tax feature
