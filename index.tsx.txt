@@ -1,0 +1,24 @@
+import { getEthPriceInUSD } from "@/lib/getEthPrice";
+
+export async function getServerSideProps() {
+  const ethPrice = await getEthPriceInUSD();
+  return {
+    props: { ethPrice },
+  };
+}
+
+export default function Home({ ethPrice }: { ethPrice: number }) {
+  const products = [/* your product data here */];
+
+  return (
+    <div>
+      {products.map(product => (
+        <div key={product.id}>
+          <h2>{product.name}</h2>
+          <p>{product.price} ETH</p>
+          <p>${(product.price * ethPrice).toFixed(2)} USD</p>
+        </div>
+      ))}
+    </div>
+  );
+}

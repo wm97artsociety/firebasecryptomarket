@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details - Universal Crypto Marketplace</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; }
+    .top-bar { background: #222; color: white; padding: 10px 20px;
+      display: flex; justify-content: space-between; align-items: center; }
+    .wallet-controls { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+    .connect-btn { background: #0073e6; color: white; }
+    .connect-btn:hover { background: #005bb5; }
+    #adminBtn { background: #0073e6; color: white; display: none; }
+    #adminBtn:hover { background: #005bb5; }
+    #contactBtn { background: #f39c12; color: white; }
+    #contactBtn:hover { background: #e67e22; }
+    .home-btn { background: #4CAF50; color: white; }
+    .home-btn:hover { background: #45a049; }
+    .wallet-controls button {
+      padding: 8px 12px; border-radius: 4px; border: none;
+      cursor: pointer; width: 100%;
+    }
+    .product-container { display: flex; justify-content: center; padding: 40px; gap: 20px; }
+    .product-detail { background: white; padding: 30px; border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+	width: 60%; }
+    .product-detail img { max-width: 100%; border-radius: 6px; margin-bottom: 20px; }
+    .product-detail h3 { font-size: 24px; margin-bottom: 15px; color: #333; }
+    .product-detail p { font-size: 16px; color: #666; margin-bottom: 15px; }
+    .product-detail .price { font-size: 22px; color: #0073e6; margin-bottom: 20px; }
+    .order-form { background: white; padding: 20px; border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+	width: 30%; }
+    .order-form h3 { font-size: 24px; margin-bottom: 15px; color: #333; }
+    .order-form label { display: block; margin-top: 10px; color: #444; }
+    .order-form input {
+      width: 100%; padding: 10px; margin-top: 5px;
+      font-size: 16px;
+	border: 1px solid #ddd; border-radius: 5px;
+    }
+    .order-form button {
+      background: #0073e6;
+	color: white; padding: 12px; border: none;
+      border-radius: 5px; cursor: pointer; width: 100%; margin-top: 15px;
+    }
+    .order-form button:hover { background: #005bb5; }
+    /* Style for alternative payment buttons */
+    .order-form .alt-pay-button {
+        background-color: #555; /* Neutral background */
+        color: white;
+        padding: 12px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 10px; /* Add some space above */
+    }
+    .order-form .alt-pay-button:hover {
+        background-color: #777;
+    }
+
+    /* Specific styles for branding */
+    #payWithVenmoBtn { background-color: #008CFF; }
+    #payWithVenmoBtn:hover { background-color: #0077E6; }
+    #payWithCashAppBtn { background-color: #00C400; }
+    #payWithCashAppBtn:hover { background-color: #00A300; }
+    #payWithPaypalBtn { background-color: #003087; }
+    #payWithPaypalBtn:hover { background-color: #002669; }
+    #payWithApplePayBtn { background-color: #000000; } /* Apple Pay typically uses black */
+    #payWithApplePayBtn:hover { background-color: #333333; }
+
+
+    footer { text-align: center; padding: 20px;
+	background: #222; color: white; margin-top: 50px; }
+  </style>
+</head>
+<body>
+<div class="top-bar">
+  <h1>🌎 Universal Crypto Marketplace</h1>
+  <div class="wallet-controls">
+    <span id="walletDisplay">Wallet: —</span>
+    <button id="connectBtn" class="connect-btn">🔌 Connect Wallet</button>
+    <button id="adminBtn" onclick="window.location.href='admin.html';">Admin Panel</button>
+    <button id="contactBtn" onclick="window.location.href='support.html';">Support & Contact</button>
+    <button class="home-btn" onclick="window.location.href='index.html';">🏠 Home</button>
+  </div>
+</div>
+<div class="product-container">
+  <div class="product-detail" id="productDetail"></div>
+  <div class="order-form" id="orderForm">
+    <h3>🛒 Complete Your Order 🛍️</h3>
+    <form id="form">
+      <label for="name">👤 Full Name:</label>
+      <input type="text" id="name" required>
+
+	<label for="address">🏠 Shipping Address:</label>
+      <input type="text" id="address" required>
+      <label for="city">🌆 City:</label>
+      <input type="text" id="city" required>
+      <label for="state">🏙️ State:</label>
+      <input type="text" id="state" required>
+      <label for="region">🌍 Region:</label>
+      <input type="text" id="region" required>
+      <label for="zip">💳 Zip Code:</label>
+      <input type="text" id="zip" required>
+      <label for="quantity">🔢 Quantity:</label>
+      <input type="number" id="quantity" min="1"
+	value="1" required>
+
+      <button type="button" id="submitPaymentBtn">💳 Pay with Crypto</button>
+
+      <button type="button" class="alt-pay-button" id="payWithVenmoBtn" onclick="window.location.href='YOUR_VENMO_PAYMENT_LINK';">📱 Pay with Venmo</button>
+      <button type="button" class="alt-pay-button" id="payWithCashAppBtn" onclick="window.location.href='YOUR_CASHAPP_PAYMENT_LINK';">💸 Pay with Cash App</button>
+      <button type="button" class="alt-pay-button" id="payWithPaypalBtn" onclick="window.location.href='YOUR_PAYPAL_PAYMENT_LINK';">🅿️ Pay with PayPal</button>
+      <button type="button" class="alt-pay-button" id="payWithApplePayBtn" onclick="window.location.href='YOUR_APPLEPAY_PAYMENT_LINK';"> Pay with Apple Pay</button>
+
+
+    </form>
+  </div>
+</div>
+<footer>&copy;
+	2025 Universal Crypto Marketplace. All Rights Reserved.</footer>
+<script>
+  // Firebase Configuration
+  // You MUST replace this with your project's actual configuration.
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY", // Replace with your API Key
+    authDomain: "YOUR_AUTH_DOMAIN", // Replace with your Auth Domain
+    projectId: "YOUR_PROJECT_ID", // Replace with your Project ID
+    storageBucket: "YOUR_STORAGE_BUCKET", // Replace with your Storage Bucket
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your Messaging Sender ID
+    appId: "YOUR_APP_ID" // Replace with your App ID
+  };
+
+  // Initialize Firebase
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  } else {
+      firebase.app(); // if already initialized, use that app
+  }
+
+  // Get a reference to the Firestore database
+  const db = firebase.firestore();
+
+  // You can add your JavaScript code for fetching product details from Firestore
+  // and handling the order form submission here.
+  // This will replace the separate "product.js" file mentioned in the original script tag.
+
+  let userAccount = null;
+  let provider;
+  let signer;
+  let ethToUsd = 0;
+  const ADMIN_WALLET = "0xREPLACEWALLETADMINWALLETNONEEDTOWORRYABOUTFRONTHOMEPAGEUSEWALLETLIKEAGPGTHATTELLSADMINOWNER"; // Replace with your actual admin wallet for the home page check
+
+  async function fetchEthToUsd() {
+    try {
+      const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+      const data = await res.json();
+      ethToUsd = data.ethereum.usd;
+      // Call function to display product after price is fetched
+      displayProductDetail();
+    } catch (err) {
+      console.error('Failed to fetch ETH to USD:', err);
+       // Still attempt to display product even if price fetch fails
+      displayProductDetail();
+    }
+  }
+
+  async function connectWallet() {
+    if (window.ethereum) {
+      provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+      await provider.send("eth_requestAccounts", []);
+      signer = provider.getSigner();
+      const account = await signer.getAddress();
+      updateWalletDisplay(account);
+      localStorage.setItem('walletAddress', account); // Store connected wallet
+    } else {
+      alert('Please install MetaMask or OKX Wallet!');
+    }
+  }
+
+  async function updateWalletDisplay(account) {
+    userAccount = account;
+    signer = provider.getSigner();
+    const short = userAccount.slice(0, 6) + "..." + userAccount.slice(-4);
+    document.getElementById('walletDisplay').textContent = `Wallet: ${short}`;
+    document.getElementById('connectBtn').textContent = '✅ Connected (Disconnect)';
+
+    if (account.toLowerCase() === ADMIN_WALLET.toLowerCase()) {
+      document.getElementById('adminBtn').style.display = 'inline-block';
+    } else {
+      document.getElementById('adminBtn').style.display = 'none';
+    }
+  }
+
+  function disconnectWallet() {
+    userAccount = null;
+    signer = null;
+    document.getElementById('walletDisplay').textContent = 'Wallet: —';
+    document.getElementById('connectBtn').textContent = '🔌 Connect Wallet';
+    document.getElementById('adminBtn').style.display = 'none';
+    localStorage.removeItem('walletAddress');
+  }
+
+  document.getElementById('connectBtn').addEventListener('click', async () => {
+    if (userAccount) {
+      disconnectWallet();
+    } else {
+      await connectWallet();
+    }
+  });
+
+  // Function to get product ID from URL
+  function getProductIdFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('id');
+  }
+
+  // Function to display product details (FETCHING FROM FIRESTORE)
+  async function displayProductDetail() {
+      const productId = getProductIdFromUrl();
+      const productDetailDiv = document.getElementById('productDetail');
+      productDetailDiv.innerHTML = '<p>Loading product details...</p>'; // Loading indicator
+
+      if (!productId) {
+          productDetailDiv.innerHTML = '<p style="color: red;">Product ID not found in URL.</p>';
+          return;
+      }
+
+      try {
+          // Fetch product from Firestore by ID
+          const doc = await db.collection('products').doc(productId).get();
+
+          if (!doc.exists) {
+              productDetailDiv.innerHTML = '<p style="color: red;">Product not found.</p>';
+              return;
+          }
+
+          const product = doc.data();
+          const usdValue = ethToUsd > 0 ? (product.ethPrice * ethToUsd).toFixed(2) : 'N/A';
+
+          // Display social media/NFT info if available
+          let socialNftHtml = '';
+          if (product.socialPostUrl) {
+              socialNftHtml += `<p><strong>Social Media:</strong> <a href="${product.socialPostUrl}" target="_blank">${product.socialPostUrl}</a></p>`;
+          }
+          if (product.nftContractAddress && product.nftTokenId) {
+               socialNftHtml += `<p><strong>NFT Details:</strong> Contract: ${product.nftContractAddress.substring(0, 6)}..., Token ID: ${product.nftTokenId}</p>`;
+               // You would typically add logic here to fetch more NFT details using an API
+          }
+
+          productDetailDiv.innerHTML = `
+              <img src="${product.image || 'placeholder-image.png'}" alt="${product.name}" />
+              <h3>${product.name}</h3>
+              <p>${product.description}</p>
+              <p><strong>Keywords:</strong> ${product.keywords ? product.keywords.join(', ') : 'None'}</p>
+              <p class="price">${product.ethPrice} ETH (~$${usdValue})</p>
+              ${socialNftHtml}
+          `;
+
+          // Store current product details for order processing
+          productDetailDiv.dataset.productName = product.name;
+          productDetailDiv.dataset.ethPrice = product.ethPrice;
+
+      } catch (error) {
+          console.error("Error fetching product details:", error);
+          productDetailDiv.innerHTML = '<p style="color: red;">Error loading product details.</p>';
+      }
+  }
+
+
+  // Handle Crypto Payment (Placeholder - requires Web3 integration)
+  document.getElementById('submitPaymentBtn').addEventListener('click', async () => {
+      if (!userAccount) {
+          alert("Please connect your wallet to make a purchase.");
+          return;
+      }
+
+      const productName = document.getElementById('productDetail').dataset.productName;
+      const ethPrice = parseFloat(document.getElementById('productDetail').dataset.ethPrice);
+      const quantity = parseInt(document.getElementById('quantity').value);
+      const totalPriceEth = ethPrice * quantity;
+
+      const name = document.getElementById('name').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const state = document.getElementById('state').value.trim();
+      const region = document.getElementById('region').value.trim();
+      const zip = document.getElementById('zip').value.trim();
+
+      if (!name || !address || !city || !state || !region || !zip || quantity <= 0 || isNaN(totalPriceEth)) {
+           alert("Please fill in all shipping details and ensure quantity is valid.");
+           return;
+      }
+
+      const shippingInfo = { name, address, city, state, region, zip };
+
+      // --- Placeholder for actual Web3 payment logic ---
+      alert(`Attempting to pay ${totalPriceEth} ETH for ${quantity} x ${productName}. Shipping to ${city}, ${state}. (Web3 payment integration needed here)`);
+
+      try {
+          // Example: Send transaction (requires recipient address and amount)
+          // const tx = await signer.sendTransaction({
+          //   to: "YOUR_MERCHANT_WALLET_ADDRESS", // <<< REPLACE with your receiving wallet address
+          //   value: ethers.utils.parseEther(totalPriceEth.toString())
+          // });
+          // await tx.wait(); // Wait for transaction confirmation
+          // alert("Payment successful!");
+
+          // --- Save Order to Firestore (after successful payment in real app) ---
+          const order = {
+              productId: getProductIdFromUrl(),
+              productName: productName,
+              quantity: quantity,
+              totalEth: totalPriceEth,
+              buyerWallet: userAccount,
+              shippingInfo: shippingInfo,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          await db.collection('orders').add(order);
+          console.log("Order saved to Firestore:", order);
+          alert("Payment simulated and order saved!"); // Update message after adding Firestore save
+
+          // Clear form or redirect
+          document.getElementById('form').reset();
+
+      } catch (error) {
+          console.error("Payment failed or Order save failed:", error);
+          alert("Payment or order saving failed. See console for details.");
+      }
+      // --- End of Placeholder ---
+  });
+
+  // Placeholder functions for alternative payment methods
+  // These would typically redirect to payment links or open payment apps
+  document.getElementById('payWithVenmoBtn').addEventListener('click', () => {
+       const productName = document.getElementById('productDetail').dataset.productName;
+       const quantity = parseInt(document.getElementById('quantity').value);
+       // Note: Dynamic links need server-side generation or API calls
+       alert(`Redirecting for Venmo payment for ${quantity} x ${productName}... (Link integration needed)`);
+       // Example: window.location.href = 'https://venmo.com/u/YOUR_VENMO_ID?txn=pay&amount=TOTAL_USD_AMOUNT&note=Order for ${productName}';
+  });
+
+  document.getElementById('payWithCashAppBtn').addEventListener('click', () => {
+       const productName = document.getElementById('productDetail').dataset.productName;
+       const quantity = parseInt(document.getElementById('quantity').value);
+       alert(`Redirecting for Cash App payment for ${quantity} x ${productName}... (Link integration needed)`);
+       // Example: window.location.href = 'https://cash.app/$YOURCASHTAG/TOTAL_USD_AMOUNT';
+  });
+
+   document.getElementById('payWithPaypalBtn').addEventListener('click', () => {
+       const productName = document.getElementById('productDetail').dataset.productName;
+       const quantity = parseInt(document.getElementById('quantity').value);
+       alert(`Redirecting for PayPal payment for ${quantity} x ${productName}... (Link integration needed)`);
+        // Example: window.location.href = 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=YOUR_PAYPAL_EMAIL&amount=TOTAL_USD_AMOUNT&item_name=Order for ${productName}';
+  });
+
+   document.getElementById('payWithApplePayBtn').addEventListener('click', () => {
+        const productName = document.getElementById('productDetail').dataset.productName;
+       const quantity = parseInt(document.getElementById('quantity').value);
+       alert(`Initiating Apple Pay for ${quantity} x ${productName}... (Integration needed)`);
+        // Apple Pay requires specific setup and often server-side handling
+  });
+
+
+  window.addEventListener('load', async () => {
+    await fetchEthToUsd(); // Fetch price and then display product
+    const storedWallet = localStorage.getItem('walletAddress');
+    if (storedWallet && window.ethereum) {
+      try {
+        provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+        const accounts = await provider.listAccounts();
+        if (accounts.length > 0 && accounts[0].toLowerCase() === storedWallet.toLowerCase()) {
+           signer = provider.getSigner();
+           updateWalletDisplay(accounts[0]);
+        } else {
+           localStorage.removeItem('walletAddress');
+        }
+      } catch (error) {
+         console.error("Error checking stored wallet:", error);
+         localStorage.removeItem('walletAddress');
+      }
+    }
+    // displayProductDetail is now called within fetchEthToUsd to ensure price is available
+  });
+
+</script>
+</body>
+</html>
