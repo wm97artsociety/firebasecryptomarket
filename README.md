@@ -10,7 +10,7 @@ buy a domain name and sub domain name or get one free from ai
 
 upload files to a hosting center like godaddy
 
-
+index.tsx and product.js are the only files that are not html files 
 
 perks to the software 
 firebase product center update firebase api and such on the code to activate product display globally 
